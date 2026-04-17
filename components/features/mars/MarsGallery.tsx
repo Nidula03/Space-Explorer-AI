@@ -32,22 +32,31 @@ const SAMPLE_MARS_IMAGES = [
 ];
 
 export default function MarsGallery() {
-  const [images, setImages] = useState<MarsRoverPhoto[]>(SAMPLE_MARS_IMAGES);
-  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<MarsRoverPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [apiSuccess, setApiSuccess] = useState(false);
 
   useEffect(() => {
     async function loadMarsPhotos() {
       try {
         setLoading(true);
+        console.log("Fetching Mars rover photos...");
+        
         const photos = await fetchMarsRoverPhotos("curiosity");
+        
         if (photos && photos.length > 0) {
+          console.log(`Fetched ${photos.length} Mars rover photos`);
           setImages(photos.slice(0, 4));
+          setApiSuccess(true);
         } else {
+          console.warn("No photos fetched, using sample images");
           setImages(SAMPLE_MARS_IMAGES);
+          setApiSuccess(false);
         }
       } catch (err) {
         console.error("Failed to load Mars photos:", err);
         setImages(SAMPLE_MARS_IMAGES);
+        setApiSuccess(false);
       } finally {
         setLoading(false);
       }
@@ -58,19 +67,24 @@ export default function MarsGallery() {
 
   return (
     <section>
+      {!apiSuccess && images.length > 0 && (
+        <div className="mb-4 p-2 bg-secondary-container/20 border border-secondary-container rounded-lg text-on-secondary-container text-xs">
+          Using sample images - API data coming soon
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {loading ? (
           [...Array(4)].map((_, i) => (
             <div 
               key={`skeleton-${i}`}
-              className="rounded-lg overflow-hidden bg-surface-variant min-h-32 animate-pulse"
+              className="rounded-lg overflow-hidden bg-surface-variant min-h-48 animate-pulse"
             />
           ))
         ) : (
           images.map((image, idx) => (
             <div 
               key={image.id}
-              className="group relative rounded-lg overflow-hidden bg-surface-variant cursor-pointer min-h-32"
+              className="group relative rounded-lg overflow-hidden bg-surface-variant cursor-pointer min-h-48"
             >
               {/* Image */}
               {image.img_src && (
@@ -85,7 +99,6 @@ export default function MarsGallery() {
               )}
               
               <div className="absolute inset-0 bg-gradient-to-br from-primary-dim/10 to-transparent flex items-center justify-center text-on-surface-muted">
-                👀
               </div>
 
               {/* Overlay on hover */}

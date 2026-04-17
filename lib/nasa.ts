@@ -65,13 +65,20 @@ export async function fetchAPOD(date?: string): Promise<APODData | null> {
     
     // Check cache first
     const cached = getCached(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log("✅ APOD cache hit - instant load");
+      return cached;
+    }
+
+    const startTime = Date.now();
 
     const params = new URLSearchParams({
       api_key: NASA_API_KEY,
       ...(date && { date }),
     });
 
+    console.log("🔄 Fetching APOD...");
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -85,26 +92,30 @@ export async function fetchAPOD(date?: string): Promise<APODData | null> {
       );
 
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
 
       if (!response.ok) {
-        console.error("APOD fetch failed:", response.status, response.statusText);
+        console.error(`❌ APOD fetch failed (${duration}ms):`, response.status);
         return null;
       }
 
       const data: APODData = await response.json();
+      console.log(`✅ APOD loaded (${duration}ms):`, data.title);
       setCache(cacheKey, data);
       return data;
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
+      
       if (fetchError.name === 'AbortError') {
-        console.error("APOD fetch timed out after 10 seconds");
+        console.error(`⏱️ APOD fetch timeout (${duration}ms)`);
       } else {
-        console.error("Error fetching APOD:", fetchError.message);
+        console.error(`❌ APOD fetch error (${duration}ms):`, fetchError.message);
       }
       return null;
     }
   } catch (error) {
-    console.error("Error fetching APOD:", error);
+    console.error("❌ Error in fetchAPOD:", error);
     return null;
   }
 }
@@ -115,48 +126,59 @@ export async function fetchMarsRoverPhotos(rover: string): Promise<MarsRoverPhot
     
     // Check cache first
     const cached = getCached(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log("✅ Mars cache hit - instant load");
+      return cached;
+    }
 
+    const startTime = Date.now();
     const params = new URLSearchParams({
       api_key: NASA_API_KEY,
       sol: "1000",
       page: "1",
+      camera: "FHAZ", // Limit to one camera for faster response
     });
 
+    console.log("🔄 Fetching Mars photos...");
+    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased to 15 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced to 15 seconds
 
     try {
       const response = await fetch(
         `${BASE_URL}/mars-photos/api/v1/rovers/${rover}/photos?${params}`,
         { 
           signal: controller.signal,
-          next: { revalidate: 86400 }
+          next: { revalidate: 3600 } // Cache for 1 hour
         }
       );
 
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
 
       if (!response.ok) {
-        console.error("Mars photos fetch failed:", response.status, response.statusText);
+        console.error(`❌ Mars fetch failed (${duration}ms):`, response.status);
         return [];
       }
 
       const data = await response.json();
       const photos = data.photos || [];
+      console.log(`✅ Mars photos loaded (${duration}ms): ${photos.length} photos`);
       setCache(cacheKey, photos);
       return photos;
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
+      
       if (fetchError.name === 'AbortError') {
-        console.error("Mars photos fetch timed out after 15 seconds");
+        console.error(`⏱️ Mars fetch timeout (${duration}ms) - NASA API is slow`);
       } else {
-        console.error("Error fetching Mars photos:", fetchError.message);
+        console.error(`❌ Mars fetch error (${duration}ms):`, fetchError.message);
       }
       return [];
     }
   } catch (error) {
-    console.error("Error fetching Mars photos:", error);
+    console.error("❌ Error in fetchMarsRoverPhotos:", error);
     return [];
   }
 }
@@ -167,12 +189,19 @@ export async function fetchAsteroids(): Promise<AsteroidData[]> {
     
     // Check cache first
     const cached = getCached(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log("✅ Asteroids cache hit - instant load");
+      return cached;
+    }
+
+    const startTime = Date.now();
 
     const params = new URLSearchParams({
       api_key: NASA_API_KEY,
     });
 
+    console.log("🔄 Fetching Asteroids...");
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -186,27 +215,31 @@ export async function fetchAsteroids(): Promise<AsteroidData[]> {
       );
 
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
 
       if (!response.ok) {
-        console.error("Asteroids fetch failed:", response.status, response.statusText);
+        console.error(`❌ Asteroids fetch failed (${duration}ms):`, response.status);
         return [];
       }
 
       const data = await response.json();
       const asteroids = data.near_earth_objects || [];
+      console.log(`✅ Asteroids loaded (${duration}ms): ${asteroids.length} asteroids`);
       setCache(cacheKey, asteroids);
       return asteroids;
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
+      
       if (fetchError.name === 'AbortError') {
-        console.error("Asteroids fetch timed out after 15 seconds");
+        console.error(`⏱️ Asteroids fetch timeout (${duration}ms)`);
       } else {
-        console.error("Error fetching asteroids:", fetchError.message);
+        console.error(`❌ Asteroids fetch error (${duration}ms):`, fetchError.message);
       }
       return [];
     }
   } catch (error) {
-    console.error("Error fetching asteroids:", error);
+    console.error("❌ Error in fetchAsteroids:", error);
     return [];
   }
 }

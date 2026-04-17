@@ -2,43 +2,39 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
-import MarsGallery from "@/components/features/mars/MarsGallery";
-import { fetchAPOD, APODData } from "@/lib/nasa";
-
-// Default sample APOD data
-const DEFAULT_APOD: APODData = {
-  title: "The Pillars of Creation",
-  explanation: "The Pillars of Creation are a stellar nursery within the Eagle Nebula, approximately 7,000 light-years from Earth. They are a great example of how stars form from stellar dust and gas. The three dust pillars are surrounded by glowing gas clouds and populated with newly formed stars.",
-  url: "https://apod.nasa.gov/apod/image/2301/pillars_jwst_1024.jpg",
-  hdurl: "https://apod.nasa.gov/apod/image/2301/pillars_jwst.jpg",
-  media_type: "image",
-  date: "2023-01-01",
-};
+import { fetchAPOD, APODData, fetchAsteroids, AsteroidData } from "@/lib/nasa";
 
 export default function Dashboard() {
-  const [apodData, setApodData] = useState<APODData>(DEFAULT_APOD);
-  const [loading, setLoading] = useState(false);
+  const [apodData, setApodData] = useState<APODData | null>(null);
+  const [asteroids, setAsteroids] = useState<AsteroidData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
+        console.log("Fetching APOD data...");
         const apod = await fetchAPOD();
         if (apod) {
+          console.log("APOD data fetched:", apod.title);
           setApodData(apod);
         } else {
-          // Keep default if fetch fails
-          setApodData(DEFAULT_APOD);
+          console.warn("APOD fetch returned null");
+          setApodData(null);
         }
+
+        console.log("Fetching Asteroids data...");
+        const asteroidsData = await fetchAsteroids();
+        setAsteroids(asteroidsData.slice(0, 3)); // Show first 3 asteroids
       } catch (err) {
-        console.error("Failed to load APOD:", err);
-        setApodData(DEFAULT_APOD);
+        console.error("Failed to load data:", err);
+        setApodData(null);
+        setAsteroids([]);
       } finally {
         setLoading(false);
       }
     }
     
-    // Only load if not already loaded
     loadData();
   }, []);
 
@@ -56,60 +52,61 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Telemetry Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          {/* APOD Section */}
-          <div className="p-8 bg-surface-high rounded-xl ghost-border hover:bg-surface-high/80 transition-all">
-            <h2 className="headline-md font-display font-semibold mb-4 text-primary-container">
-              Astronomy Picture of the Day
-            </h2>
-            {loading ? (
-              <div className="h-48 bg-surface-variant rounded-lg flex items-center justify-center text-on-surface-muted animate-pulse">
-                Loading cosmic imagery...
+        {/* APOD Section - Full Width with Side-by-Side Layout */}
+        <div className="p-8 bg-surface-high rounded-xl ghost-border hover:bg-surface-high/80 transition-all mb-12">
+          <h2 className="headline-md font-display font-semibold mb-6 text-primary-container">
+            Astronomy Picture of the Day
+          </h2>
+          {loading ? (
+            <div className="h-80 bg-surface-variant rounded-lg flex items-center justify-center text-on-surface-muted animate-pulse">
+              Loading today's cosmic imagery...
+            </div>
+          ) : apodData ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              {/* Description on Left */}
+              <div className="flex flex-col justify-center">
+                <h3 className="text-2xl font-bold text-primary mb-4">{apodData.title}</h3>
+                <p className="text-on-surface-dim leading-relaxed mb-4">
+                  {apodData.explanation}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-primary/10 text-primary-fixed px-3 py-1 rounded-full">
+                    {apodData.date}
+                  </span>
+                  <span className="text-xs text-on-surface-muted">
+                    {apodData.media_type === 'image' ? '📷 Image' : '🎥 Video'}
+                  </span>
+                </div>
               </div>
-            ) : apodData && apodData.url ? (
-              <>
-                <div className="h-48 bg-surface-variant rounded-lg overflow-hidden flex items-center justify-center">
-                  {apodData.media_type === 'image' ? (
-                    <img 
-                      src={apodData.url} 
-                      alt={apodData.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23282934' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='%23999' font-size='18'%3EImage unavailable%3C/text%3E%3C/svg%3E";
-                      }}
-                    />
-                  ) : (
+
+              {/* Image on Right */}
+              <div className="h-80 rounded-xl overflow-hidden shadow-xl">
+                {apodData.media_type === 'image' ? (
+                  <img 
+                    src={apodData.url} 
+                    alt={apodData.title}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23282934' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' fill='%23999' font-size='18'%3EImage unavailable%3C/text%3E%3C/svg%3E";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary-container/20 flex items-center justify-center">
                     <iframe 
                       src={apodData.url}
                       title={apodData.title}
                       className="w-full h-full"
                       allowFullScreen
                     />
-                  )}
-                </div>
-                <div className="mt-4">
-                  <h3 className="text-primary mb-2 font-semibold">{apodData.title}</h3>
-                  <p className="body-sm text-on-surface-dim">
-                    {apodData.explanation}
-                  </p>
-                  <p className="text-xs text-on-surface-muted mt-2">{apodData.date}</p>
-                </div>
-              </>
-            ) : (
-              <div className="h-48 bg-surface-variant rounded-lg flex items-center justify-center text-on-surface-muted">
-                Using default APOD data
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-
-          {/* Mars Rover Section */}
-          <div className="p-8 bg-surface-high rounded-xl ghost-border">
-            <h2 className="headline-md font-display font-semibold mb-4 text-primary-container">
-              Mars Rover Images
-            </h2>
-            <MarsGallery />
-          </div>
+            </div>
+          ) : (
+            <div className="h-80 bg-surface-variant rounded-lg flex items-center justify-center text-on-surface-muted">
+              Unable to load APOD data
+            </div>
+          )}
         </div>
 
         {/* Asteroids Section */}
@@ -118,23 +115,41 @@ export default function Dashboard() {
             Near-Earth Asteroids
           </h2>
           <div className="space-y-4">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="p-4 bg-surface-low rounded-lg border-l-2 border-primary-fixed">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="label-md font-semibold text-primary-dim uppercase mb-1">
-                      Asteroid {item}
-                    </p>
-                    <p className="body-sm text-on-surface-dim">
-                      Distance: {100 * item} million km • Risk: Low
-                    </p>
-                  </div>
-                  <span className="label-sm px-3 py-1 bg-secondary-container rounded-full text-on-secondary-container">
-                    Safe
-                  </span>
-                </div>
+            {loading ? (
+              <div className="h-32 bg-surface-variant rounded-lg flex items-center justify-center text-on-surface-muted animate-pulse">
+                Loading asteroids...
               </div>
-            ))}
+            ) : asteroids.length > 0 ? (
+              asteroids.map((asteroid) => {
+                const diameter = asteroid.estimated_diameter?.km?.estimated_diameter_max || 0;
+                const closeApproach = asteroid.close_approach_data?.[0];
+                const distance = closeApproach ? parseFloat(closeApproach.miss_distance.kilometers) : 0;
+                const velocity = closeApproach ? parseFloat(closeApproach.relative_velocity.kilometers_per_second) : 0;
+                const hazardous = asteroid.is_potentially_hazardous_asteroid || false;
+                
+                return (
+                  <div key={asteroid.id} className="p-4 bg-surface-lowest rounded-lg border-l-4 border-primary-container hover:border-primary hover:bg-surface-container transition-all">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="label-md font-bold text-primary-fixed uppercase mb-1">
+                          {asteroid.name}
+                        </p>
+                        <p className="body-sm text-on-surface-dim">
+                          Diameter: {diameter.toFixed(2)} km • Distance: {(distance / 1000000).toFixed(1)}M km • Velocity: {(velocity * 3600).toFixed(0)} km/h
+                        </p>
+                      </div>
+                      <span className={`label-sm px-4 py-2 rounded-full font-semibold ${hazardous ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                        {hazardous ? 'Hazardous' : 'Safe'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="h-32 bg-surface-variant rounded-lg flex items-center justify-center text-on-surface-muted">
+                No asteroids data available
+              </div>
+            )}
           </div>
         </div>
       </div>
