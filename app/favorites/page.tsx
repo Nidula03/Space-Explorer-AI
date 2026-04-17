@@ -1,8 +1,11 @@
+import Navbar from "@/components/layout/Navbar";
 export default function Favorites() {
   return (
-    <div className="min-h-screen bg-surface-lowest pt-28 pb-16">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="mb-12">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-surface-lowest pt-28 pb-16">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="mb-12">
           <h1 className="display-md font-display font-bold mb-2 text-on-surface">
             Your Favorites
           </h1>
@@ -41,6 +44,7 @@ export default function Favorites() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

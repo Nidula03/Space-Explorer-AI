@@ -7,7 +7,7 @@ export default function FeatureGrid() {
         <div className="md:col-span-8 group relative overflow-hidden rounded-xl bg-surface-container border border-outline-variant/10 aspect-video md:aspect-auto md:h-[500px]">
           <img 
             className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-700" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZSlcb-pbQrfMF79netOByei19Ay9tYuM_TxBNJK-drkJAzLggMa-IijAMgFfdA3iyvXqZVKB9Jg_4aY1U7mNn5N5TP-GJk4cGfAiNV_8g84Si18qwjtGE7IjpszP9XPM2qfbXQ5mhHRRLVM79bygl-eNJLDkiDoZHcI35HCb3YpF73q1HUZQsNdcrMMHUJugp4Fr-6W6NwMrBhwxmA_WL7w_dS4BAbkfcstAKwRpEwt=w1024" 
+            src="https://archive-share.america.gov/wp-content/uploads/2019/12/iss042e215971.jpg"
             alt="Earth from space"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
@@ -23,7 +23,9 @@ export default function FeatureGrid() {
         {/* Secondary Feature - 4 columns */}
         <div className="md:col-span-4 group flex flex-col justify-between p-8 rounded-xl bg-surface-container-high border-t border-l border-outline-variant/20 shadow-2xl">
           <div>
-            <span className="material-symbols-outlined text-primary-container text-4xl mb-6" style={{fontVariationSettings: "'FILL' 1"}}>rocket_launch</span>
+            <div className="bg-primary/5 p-4 rounded-lg mb-4 w-fit">
+              <span className="material-symbols-outlined" style={{fontSize: '32px', color: 'var(--primary-container)'}}>rocket_launch</span>
+            </div>
             <h3 className="text-2xl font-display font-bold text-on-surface mb-4">Launch Intelligence</h3>
             <p className="text-on-surface-variant text-sm leading-relaxed">AI-optimized mission parameters for the next generation of deep-space exploration. Analyzing 40+ years of NASA flight logs.</p>
           </div>
