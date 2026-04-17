@@ -1,39 +1,105 @@
-const sampleImages = [
-  { id: 1, title: "Curiosity Rover", date: "2026-04-15" },
-  { id: 2, title: "Perseverance Rover", date: "2026-04-14" },
-  { id: 3, title: "Jezero Crater", date: "2026-04-13" },
-  { id: 4, title: "Valles Marineris", date: "2026-04-12" },
+"use client";
+
+import { useEffect, useState } from "react";
+import { fetchMarsRoverPhotos, MarsRoverPhoto } from "@/lib/nasa";
+
+// Sample Mars rover data
+const SAMPLE_MARS_IMAGES = [
+  {
+    id: 1,
+    img_src: "https://images-assets.nasa.gov/image/PIA23436/PIA23436~thumb.jpg",
+    earth_date: "2019-12-25",
+    rover: { name: "Curiosity" },
+  },
+  {
+    id: 2,
+    img_src: "https://images-assets.nasa.gov/image/PIA23999/PIA23999~thumb.jpg",
+    earth_date: "2020-10-18",
+    rover: { name: "Perseverance" },
+  },
+  {
+    id: 3,
+    img_src: "https://images-assets.nasa.gov/image/PIA23772/PIA23772~thumb.jpg",
+    earth_date: "2020-08-04",
+    rover: { name: "Curiosity" },
+  },
+  {
+    id: 4,
+    img_src: "https://images-assets.nasa.gov/image/PIA03470/PIA03470~thumb.jpg",
+    earth_date: "2001-04-15",
+    rover: { name: "Rover" },
+  },
 ];
 
 export default function MarsGallery() {
+  const [images, setImages] = useState<MarsRoverPhoto[]>(SAMPLE_MARS_IMAGES);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadMarsPhotos() {
+      try {
+        setLoading(true);
+        const photos = await fetchMarsRoverPhotos("curiosity");
+        if (photos && photos.length > 0) {
+          setImages(photos.slice(0, 4));
+        } else {
+          setImages(SAMPLE_MARS_IMAGES);
+        }
+      } catch (err) {
+        console.error("Failed to load Mars photos:", err);
+        setImages(SAMPLE_MARS_IMAGES);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadMarsPhotos();
+  }, []);
+
   return (
-    <section className="p-6 bg-surface-high rounded-xl ghost-border">
-      <h2 className="headline-md font-display font-semibold text-primary-container mb-6">
-        🔍 Mars Rover Gallery
-      </h2>
-
+    <section>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {sampleImages.map((image) => (
-          <div 
-            key={image.id}
-            className="group relative rounded-lg overflow-hidden bg-surface-variant cursor-pointer min-h-32"
-          >
-            {/* Placeholder */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-dim/10 to-transparent flex items-center justify-center text-on-surface-muted">
-              👀
-            </div>
+        {loading ? (
+          [...Array(4)].map((_, i) => (
+            <div 
+              key={`skeleton-${i}`}
+              className="rounded-lg overflow-hidden bg-surface-variant min-h-32 animate-pulse"
+            />
+          ))
+        ) : (
+          images.map((image, idx) => (
+            <div 
+              key={image.id}
+              className="group relative rounded-lg overflow-hidden bg-surface-variant cursor-pointer min-h-32"
+            >
+              {/* Image */}
+              {image.img_src && (
+                <img 
+                  src={image.img_src}
+                  alt={`Mars rover photo ${idx + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-dim/10 to-transparent flex items-center justify-center text-on-surface-muted">
+                👀
+              </div>
 
-            {/* Overlay on hover */}
-            <div className="absolute inset-0 bg-surface-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 rounded-lg">
-              <h3 className="label-md font-semibold text-on-secondary-container">
-                {image.title}
-              </h3>
-              <p className="label-sm text-on-surface-muted">
-                {image.date}
-              </p>
+              {/* Overlay on hover */}
+              <div className="absolute inset-0 bg-surface-lowest/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 rounded-lg">
+                <h3 className="label-md font-semibold text-on-secondary-container">
+                  {image.rover.name}
+                </h3>
+                <p className="label-sm text-on-surface-muted">
+                  {image.earth_date}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </section>
   );

@@ -1,3 +1,39 @@
+// Pre-generate stars once to avoid recalculation on every render
+const generateStars = () => {
+  const stars = [];
+  for (let i = 0; i < 50; i++) {
+    stars.push({
+      id: i,
+      width: Math.random() * 2 + 0.5,
+      height: Math.random() * 2 + 0.5,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      opacity: Math.random() * 0.7 + 0.3,
+    });
+  }
+  return stars;
+};
+
+const STARS = generateStars();
+
+const generateParticles = () => {
+  const particles = [];
+  for (let i = 0; i < 8; i++) {
+    particles.push({
+      id: i,
+      width: Math.random() * 4 + 1,
+      height: Math.random() * 4 + 1,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      delay: Math.random() * 5,
+      duration: Math.random() * 10 + 15,
+    });
+  }
+  return particles;
+};
+
+const PARTICLES = generateParticles();
+
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-6 pt-20 bg-surface">
@@ -7,16 +43,16 @@ export default function Hero() {
         
         {/* Stars */}
         <div className="absolute inset-0 opacity-40">
-          {[...Array(100)].map((_, i) => (
+          {STARS.map((star) => (
             <div
-              key={i}
+              key={star.id}
               className="absolute bg-white rounded-full"
               style={{
-                width: Math.random() * 2 + 0.5 + 'px',
-                height: Math.random() * 2 + 0.5 + 'px',
-                left: Math.random() * 100 + '%',
-                top: Math.random() * 100 + '%',
-                opacity: Math.random() * 0.7 + 0.3,
+                width: star.width + 'px',
+                height: star.height + 'px',
+                left: star.left + '%',
+                top: star.top + '%',
+                opacity: star.opacity,
               }}
             ></div>
           ))}
@@ -29,17 +65,17 @@ export default function Hero() {
 
         {/* Floating Space Particles */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(15)].map((_, i) => (
+          {PARTICLES.map((particle) => (
             <div
-              key={`particle-${i}`}
+              key={`particle-${particle.id}`}
               className="absolute bg-cyan-300/20 rounded-full float-particle"
               style={{
-                width: Math.random() * 4 + 1 + 'px',
-                height: Math.random() * 4 + 1 + 'px',
-                left: Math.random() * 100 + '%',
-                top: Math.random() * 100 + '%',
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${Math.random() * 10 + 15}s`,
+                width: particle.width + 'px',
+                height: particle.height + 'px',
+                left: particle.left + '%',
+                top: particle.top + '%',
+                animationDelay: `${particle.delay}s`,
+                animationDuration: `${particle.duration}s`,
               }}
             ></div>
           ))}
