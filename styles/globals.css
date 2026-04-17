@@ -74,9 +74,376 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Utility: Radial Gradient */
+.bg-gradient-radial {
+  background: radial-gradient(circle at center, var(--tw-gradient-stops));
+}
+
+/* Performance: GPU Acceleration and Layout Containment */
+.overflow-hidden {
+  contain: layout style paint;
+}
+
+section {
+  will-change: auto;
+}
+
+/* Optimize animations for scrolling performance */
+@supports (will-change: transform) {
+  [class*="animate-"] {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+}
+
+/* Optimize blur effects for performance */
+[class*="blur"] {
+  will-change: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Isolate starfield and background for better scroll performance */
+section > .absolute.inset-0.z-0 {
+  contain: layout style paint;
+  pointer-events: none;
+}
+
+/* Optimize content container for scroll performance */
+section > .relative.z-10 {
+  contain: layout style;
+  will-change: auto;
+}
+
+/* Global GPU optimization - prevent expensive repaints */
+* {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 /* Material Symbols */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Gradient Animations */
+@keyframes float-top-left {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(50px, 50px);
+  }
+}
+
+@keyframes float-bottom-right {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-50px, -50px);
+  }
+}
+
+.animate-float-top-left {
+  animation: float-top-left 8s ease-in-out infinite;
+}
+
+.animate-float-bottom-right {
+  animation: float-bottom-right 10s ease-in-out infinite;
+}
+
+/* Orbital Animations */
+@keyframes orbit-fast {
+  0% {
+    transform: rotate(0deg) translateX(60px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(60px) rotate(-360deg);
+  }
+}
+
+@keyframes orbit-medium {
+  0% {
+    transform: rotate(0deg) translateX(100px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(100px) rotate(-360deg);
+  }
+}
+
+@keyframes orbit-slow {
+  0% {
+    transform: rotate(0deg) translateX(140px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(140px) rotate(-360deg);
+  }
+}
+
+/* Large Orbital Animations - Slow */
+@keyframes orbit-slow-large {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit-medium-large {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit-fast-large {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-orbit-fast {
+  animation: orbit-fast 6s linear infinite;
+}
+
+.animate-orbit-medium {
+  animation: orbit-medium 12s linear infinite;
+}
+
+.animate-orbit-slow {
+  animation: orbit-slow 18s linear infinite;
+}
+
+.animate-orbit-slow-large {
+  animation: orbit-slow-large 25s linear infinite;
+}
+
+.animate-orbit-medium-large {
+  animation: orbit-medium-large 20s linear infinite;
+}
+
+.animate-orbit-fast-large {
+  animation: orbit-fast-large 15s linear infinite;
+}
+
+/* Pulse animation for central node */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 40px rgba(255,255,255,1)) drop-shadow(0 0 60px rgba(0,245,255,0.6));
+  }
+  50% {
+    opacity: 0.8;
+    filter: drop-shadow(0 0 30px rgba(255,255,255,0.8)) drop-shadow(0 0 50px rgba(0,245,255,0.4));
+  }
+}
+
+.animate-pulse {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Shooting Star Animation - Top Left to Bottom Right */
+@keyframes shooting-star {
+  0% {
+    transform: translateX(-100px) translateY(-100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(600px) translateY(600px);
+    opacity: 0;
+  }
+}
+
+/* Slow Moving Shooting Star - Center downward */
+@keyframes shooting-star-slow {
+  0% {
+    transform: translateY(-300px) translateX(0px) scale(1);
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(800px) translateX(150px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Shooting Star - Up curve to right (bottom-left to top-right) */
+@keyframes shooting-star-up-diagonal-right {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-1300px) translateX(500px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Shooting Star - Down curve to right (top-right downward) */
+@keyframes shooting-star-down-diagonal-right {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(1300px) translateX(-500px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+.shooting-star {
+  animation: shooting-star 3s ease-in-out 10s infinite;
+  width: 3px;
+  height: 150px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(255, 200, 100, 0.5), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
+  box-shadow: 0 0 15px rgba(0, 200, 255, 0.3);
+  transform-origin: top left;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-slow {
+  animation: shooting-star-slow 20s linear infinite;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  box-shadow: 0 0 12px rgba(100, 200, 255, 0.4);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-slow-up {
+  animation: shooting-star-slow-up 20s linear infinite;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  box-shadow: 0 0 12px rgba(100, 200, 255, 0.4);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-down-curve-right {
+  animation: shooting-star-down-curve-right 20s linear infinite;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  box-shadow: 0 0 12px rgba(100, 200, 255, 0.4);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-down-curve-left {
+  animation: shooting-star-down-curve-left 20s linear infinite;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  box-shadow: 0 0 12px rgba(100, 200, 255, 0.4);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-up-curve-right {
+  animation: shooting-star-up-curve-right 20s linear infinite;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  box-shadow: 0 0 12px rgba(100, 200, 255, 0.4);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-up-curve-left {
+  animation: shooting-star-up-curve-left 20s linear infinite;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  box-shadow: 0 0 12px rgba(100, 200, 255, 0.4);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-horizontal-curve {
+  animation: shooting-star-horizontal-curve 20s linear infinite;
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  box-shadow: 0 0 12px rgba(100, 200, 255, 0.4);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-up-diagonal-right {
+  animation: shooting-star-up-diagonal-right 60s linear infinite;
+  width: 0.5px;
+  height: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(100, 200, 255, 0.3);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.shooting-star-down-diagonal-right {
+  animation: shooting-star-down-diagonal-right 60s linear infinite;
+  width: 0.5px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(100, 200, 255, 0.4), rgba(255, 255, 255, 0));
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(100, 200, 255, 0.3);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Floating Particle Animation */
+@keyframes float-particle {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-100px) translateX(50px) scale(1.2);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-200px) translateX(100px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.float-particle {
+  animation: float-particle linear infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 /* Display Typography */
