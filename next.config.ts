@@ -3,7 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* Optimize production builds */
   compress: true,
-  swcMinify: true,
   
   /* Image optimization */
   images: {
@@ -12,6 +11,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
       }
     ],
   },

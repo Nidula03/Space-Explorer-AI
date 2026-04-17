@@ -1,8 +1,7 @@
-// NASA API integration
-// This file handles all calls to the NASA API endpoints
+// Backend API integration
+// This file handles all calls to the Space Explorer AI backend
 
-const NASA_API_KEY = process.env.NEXT_PUBLIC_NASA_API_KEY || "DEMO_KEY";
-const BASE_URL = "https://api.nasa.gov";
+const BACKEND_URL = "http://localhost:8080/api/space";
 
 // Simple in-memory cache
 const cache = new Map<string, { data: any; timestamp: number }>();
@@ -30,40 +29,33 @@ export interface APODData {
   date: string;
 }
 
-export interface MarsRoverPhoto {
-  id: number;
-  img_src: string;
-  earth_date: string;
-  rover: {
-    name: string;
-  };
+export interface SearchResult {
+  id: string;
+  title: string;
+  image_url: string;
+  description: string;
 }
 
-export interface AsteroidData {
+export interface Planet {
   id: string;
   name: string;
-  estimated_diameter: {
-    km: {
-      estimated_diameter_min: number;
-      estimated_diameter_max: number;
-    };
-  };
-  close_approach_data: Array<{
-    miss_distance: {
-      kilometers: string;
-    };
-    relative_velocity: {
-      kilometers_per_second: string;
-    };
-  }>;
-  is_potentially_hazardous_asteroid: boolean;
+  description: string;
+  image_url: string;
+  diameter?: string;
+  distance_from_sun?: string;
 }
 
-export async function fetchAPOD(date?: string): Promise<APODData | null> {
+export interface AIExplanation {
+  question: string;
+  explanation: string;
+  sources?: string[];
+}
+
+// APOD Endpoint
+export async function fetchAPOD(): Promise<APODData | null> {
   try {
-    const cacheKey = `apod-${date || 'today'}`;
+    const cacheKey = "apod-today";
     
-    // Check cache first
     const cached = getCached(cacheKey);
     if (cached) {
       console.log("✅ APOD cache hit - instant load");
@@ -71,36 +63,30 @@ export async function fetchAPOD(date?: string): Promise<APODData | null> {
     }
 
     const startTime = Date.now();
-
-    const params = new URLSearchParams({
-      api_key: NASA_API_KEY,
-      ...(date && { date }),
-    });
-
-    console.log("🔄 Fetching APOD...");
+    console.log("🔄 Fetching APOD from backend...", BACKEND_URL);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // Increased to 20 seconds for NASA API
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/planetary/apod?${params}`,
-        { 
-          signal: controller.signal,
-          next: { revalidate: 86400 }
+      const response = await fetch(`${BACKEND_URL}/apod`, { 
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
         }
-      );
+      });
 
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
 
       if (!response.ok) {
-        console.error(`❌ APOD fetch failed (${duration}ms):`, response.status);
+        console.error(`❌ APOD fetch failed (${duration}ms):`, response.status, response.statusText);
         return null;
       }
 
-      const data: APODData = await response.json();
-      console.log(`✅ APOD loaded (${duration}ms):`, data.title);
+      const jsonData = await response.json();
+      const data = jsonData.data || jsonData;
+      console.log(`✅ APOD loaded (${duration}ms):`, data?.title);
       setCache(cacheKey, data);
       return data;
     } catch (fetchError: any) {
@@ -111,6 +97,7 @@ export async function fetchAPOD(date?: string): Promise<APODData | null> {
         console.error(`⏱️ APOD fetch timeout (${duration}ms)`);
       } else {
         console.error(`❌ APOD fetch error (${duration}ms):`, fetchError.message);
+        console.error('⚠️  Is backend running at', BACKEND_URL, '?');
       }
       return null;
     }
@@ -120,126 +107,168 @@ export async function fetchAPOD(date?: string): Promise<APODData | null> {
   }
 }
 
-export async function fetchMarsRoverPhotos(rover: string): Promise<MarsRoverPhoto[]> {
+// Search Endpoint
+export async function searchImages(query: string): Promise<SearchResult[]> {
   try {
-    const cacheKey = `mars-${rover}-1000-1`;
+    const cacheKey = `search-${query}`;
     
-    // Check cache first
     const cached = getCached(cacheKey);
     if (cached) {
-      console.log("✅ Mars cache hit - instant load");
+      console.log("✅ Search cache hit");
       return cached;
     }
 
     const startTime = Date.now();
-    const params = new URLSearchParams({
-      api_key: NASA_API_KEY,
-      sol: "1000",
-      page: "1",
-      camera: "FHAZ", // Limit to one camera for faster response
-    });
-
-    console.log("🔄 Fetching Mars photos...");
+    console.log("🔄 Searching images...");
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced to 15 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/mars-photos/api/v1/rovers/${rover}/photos?${params}`,
-        { 
-          signal: controller.signal,
-          next: { revalidate: 3600 } // Cache for 1 hour
+      const response = await fetch(`${BACKEND_URL}/search?query=${encodeURIComponent(query)}`, { 
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
         }
-      );
+      });
 
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
 
       if (!response.ok) {
-        console.error(`❌ Mars fetch failed (${duration}ms):`, response.status);
+        console.error(`❌ Search failed (${duration}ms):`, response.status, response.statusText);
         return [];
       }
 
-      const data = await response.json();
-      const photos = data.photos || [];
-      console.log(`✅ Mars photos loaded (${duration}ms): ${photos.length} photos`);
-      setCache(cacheKey, photos);
-      return photos;
+      const jsonData = await response.json();
+      const results = jsonData.data || [];
+      console.log(`✅ Search completed (${duration}ms): ${results.length} results`);
+      setCache(cacheKey, results);
+      return results;
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
       
       if (fetchError.name === 'AbortError') {
-        console.error(`⏱️ Mars fetch timeout (${duration}ms) - NASA API is slow`);
+        console.error(`⏱️ Search timeout (${duration}ms)`);
       } else {
-        console.error(`❌ Mars fetch error (${duration}ms):`, fetchError.message);
+        console.error(`❌ Search error (${duration}ms):`, fetchError.message);
+        console.error('⚠️  Is backend running at', BACKEND_URL, '?');
       }
       return [];
     }
   } catch (error) {
-    console.error("❌ Error in fetchMarsRoverPhotos:", error);
+    console.error("❌ Error in searchImages:", error);
     return [];
   }
 }
 
-export async function fetchAsteroids(): Promise<AsteroidData[]> {
+// Planets Endpoint
+export async function fetchPlanets(): Promise<Planet[]> {
   try {
-    const cacheKey = "asteroids-browse";
+    const cacheKey = "planets";
     
-    // Check cache first
     const cached = getCached(cacheKey);
     if (cached) {
-      console.log("✅ Asteroids cache hit - instant load");
+      console.log("✅ Planets cache hit");
       return cached;
     }
 
     const startTime = Date.now();
+    console.log("🔄 Fetching planets...");
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const params = new URLSearchParams({
-      api_key: NASA_API_KEY,
-    });
+    try {
+      const response = await fetch(`${BACKEND_URL}/planets`, { 
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
 
-    console.log("🔄 Fetching Asteroids...");
+      clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
+
+      if (!response.ok) {
+        console.error(`❌ Planets fetch failed (${duration}ms):`, response.status, response.statusText);
+        return [];
+      }
+
+      const jsonData = await response.json();
+      const planets = jsonData.data || [];
+      console.log(`✅ Planets loaded (${duration}ms): ${planets.length} planets`);
+      setCache(cacheKey, planets);
+      return planets;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
+      
+      if (fetchError.name === 'AbortError') {
+        console.error(`⏱️ Planets fetch timeout (${duration}ms)`);
+      } else {
+        console.error(`❌ Planets fetch error (${duration}ms):`, fetchError.message);
+        console.error('⚠️  Is backend running at', BACKEND_URL, '?');
+      }
+      return [];
+    }
+  } catch (error) {
+    console.error("❌ Error in fetchPlanets:", error);
+    return [];
+  }
+}
+
+// AI Explainer Endpoint
+export async function explainSpace(question: string): Promise<AIExplanation | null> {
+  try {
+    const startTime = Date.now();
+    console.log("🔄 Getting AI explanation...");
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/neo/rest/v1/neo/browse?${params}`,
-        { 
-          signal: controller.signal,
-          next: { revalidate: 86400 }
-        }
-      );
+      const response = await fetch(`${BACKEND_URL}/ai-explain`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: question }),
+        signal: controller.signal,
+      });
 
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
 
       if (!response.ok) {
-        console.error(`❌ Asteroids fetch failed (${duration}ms):`, response.status);
-        return [];
+        console.error(`❌ AI explanation failed (${duration}ms):`, response.status, response.statusText);
+        return null;
       }
 
-      const data = await response.json();
-      const asteroids = data.near_earth_objects || [];
-      console.log(`✅ Asteroids loaded (${duration}ms): ${asteroids.length} asteroids`);
-      setCache(cacheKey, asteroids);
-      return asteroids;
+      const jsonData = await response.json();
+      const explanation = jsonData.data;
+      console.log(`✅ AI explanation loaded (${duration}ms)`);
+      return explanation ? { question, explanation: explanation.explanation, sources: explanation.sources } : null;
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
       
       if (fetchError.name === 'AbortError') {
-        console.error(`⏱️ Asteroids fetch timeout (${duration}ms)`);
+        console.error(`⏱️ AI explanation timeout (${duration}ms)`);
       } else {
-        console.error(`❌ Asteroids fetch error (${duration}ms):`, fetchError.message);
+        console.error(`❌ AI explanation error (${duration}ms):`, fetchError.message);
+        console.error('⚠️  Is backend running at', BACKEND_URL, '?');
       }
-      return [];
+      return null;
     }
   } catch (error) {
-    console.error("❌ Error in fetchAsteroids:", error);
-    return [];
+    console.error("❌ Error in explainSpace:", error);
+    return null;
   }
+}
+
+// Asteroids Endpoint (keeping for backward compatibility)
+export async function fetchAsteroids() {
+  return [];
 }
